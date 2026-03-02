@@ -1,6 +1,6 @@
-# PowerSkills
+# SkillPilot
 
-[![CI](https://github.com/wayyoungboy/PowerSkills/actions/workflows/ci.yml/badge.svg)](https://github.com/wayyoungboy/PowerSkills/actions/workflows/ci.yml)
+[![CI](https://github.com/wayyoungboy/SkillPilot/actions/workflows/ci.yml/badge.svg)](https://github.com/wayyoungboy/SkillPilot/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -21,8 +21,8 @@
 
 ```bash
 # Clone the repository
-git clone git@github.com:wayyoungboy/PowerSkills.git
-cd PowerSkills
+git clone git@github.com:wayyoungboy/SkillPilot.git
+cd SkillPilot
 
 # Create virtual environment
 python -m venv .venv
@@ -46,7 +46,7 @@ cp .env.example .env
 
 ```bash
 # Start the server
-uvicorn powerskills.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn skillpilot.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Visit http://localhost:8000/docs to view the API documentation.
@@ -55,10 +55,10 @@ Visit http://localhost:8000/docs to view the API documentation.
 
 ```bash
 # Run all tests
-pytest powerskills/tests/ -v
+pytest skillpilot/tests/ -v
 
 # Run tests with coverage report
-pytest powerskills/tests/ --cov=powerskills --cov-report=html
+pytest skillpilot/tests/ --cov=skillpilot --cov-report=html
 ```
 
 ---
@@ -77,7 +77,7 @@ pytest powerskills/tests/ --cov=powerskills --cov-report=html
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                  PowerSkills Application Layer       │
+│                  SkillPilot Application Layer       │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐│
 │  │ Web Frontend │  │ API Service  │  │ SDK          ││
 │  │ (TODO)       │  │ (FastAPI)    │  │ (Python)     ││
@@ -85,7 +85,7 @@ pytest powerskills/tests/ --cov=powerskills --cov-report=html
 └────────────────────┬────────────────────────────────┘
                      │ REST API
 ┌────────────────────▼────────────────────────────────┐
-│              PowerSkills Business Logic Layer        │
+│              SkillPilot Business Logic Layer        │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐│
 │  │ Skill Search │  │ Skill        │  │ User         ││
 │  │ Engine       │  │ Orchestration│  │ Service      ││
@@ -108,8 +108,8 @@ pytest powerskills/tests/ --cov=powerskills --cov-report=html
 ## Project Structure
 
 ```
-PowerSkills/
-├── powerskills/              # Main source directory
+SkillPilot/
+├── skillpilot/                 # Main source directory
 │   ├── api/routes/          # API routes
 │   │   ├── auth.py          # Authentication routes
 │   │   ├── skill.py         # Skill management routes
@@ -179,7 +179,7 @@ PowerSkills/
 
 ### SeekDB Tables
 
-PowerSkills uses SeekDB as its single storage infrastructure with the following tables:
+SkillPilot uses SeekDB as its single storage infrastructure with the following tables:
 
 | Table | Description | Main Fields |
 |-------|-------------|-------------|
@@ -228,18 +228,18 @@ This project uses Ruff for code linting and formatting:
 
 ```bash
 # Lint code
-ruff check powerskills/
+ruff check skillpilot/
 
 # Format code
-ruff format powerskills/
+ruff format skillpilot/
 ```
 
 ### Adding New Features
 
-1. Add model definitions in `powerskills/core/models/`
-2. Implement business logic in `powerskills/core/services/`
-3. Add API routes in `powerskills/api/routes/`
-4. Write test cases in `powerskills/tests/`
+1. Add model definitions in `skillpilot/core/models/`
+2. Implement business logic in `skillpilot/core/services/`
+3. Add API routes in `skillpilot/api/routes/`
+4. Write test cases in `skillpilot/tests/`
 
 ---
 
@@ -275,5 +275,5 @@ MIT License
 
 ## Contact
 
-- GitHub: [@wayyoungboy](https://github.com/wayyoungboy/PowerSkills)
+- GitHub: [@wayyoungboy](https://github.com/wayyoungboy/SkillPilot)
 - Email: wayyoungboy@gmail.com

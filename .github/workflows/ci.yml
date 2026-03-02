@@ -36,12 +36,12 @@ jobs:
 
       - name: Run tests
         run: |
-          pytest powerskills/tests/ -v --tb=short
+          pytest skillpilot/tests/ -v --tb=short
 
       - name: Run linter
         run: |
           pip install ruff
-          ruff check powerskills/
+          ruff check skillpilot/
 
   build:
     runs-on: ubuntu-latest

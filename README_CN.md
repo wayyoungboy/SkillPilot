@@ -1,6 +1,6 @@
-# PowerSkills
+# SkillPilot
 
-[![CI](https://github.com/wayyoungboy/PowerSkills/actions/workflows/ci.yml/badge.svg)](https://github.com/wayyoungboy/PowerSkills/actions/workflows/ci.yml)
+[![CI](https://github.com/wayyoungboy/SkillPilot/actions/workflows/ci.yml/badge.svg)](https://github.com/wayyoungboy/SkillPilot/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -21,8 +21,8 @@
 
 ```bash
 # 克隆项目
-git clone git@github.com:wayyoungboy/PowerSkills.git
-cd PowerSkills
+git clone git@github.com:wayyoungboy/SkillPilot.git
+cd SkillPilot
 
 # 创建虚拟环境
 python -m venv .venv
@@ -46,7 +46,7 @@ cp .env.example .env
 
 ```bash
 # 启动服务
-uvicorn powerskills.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn skillpilot.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 访问 http://localhost:8000/docs 查看 API 文档。
@@ -55,10 +55,10 @@ uvicorn powerskills.main:app --reload --host 0.0.0.0 --port 8000
 
 ```bash
 # 运行所有测试
-pytest powerskills/tests/ -v
+pytest skillpilot/tests/ -v
 
 # 运行测试并生成覆盖率报告
-pytest powerskills/tests/ --cov=powerskills --cov-report=html
+pytest skillpilot/tests/ --cov=skillpilot --cov-report=html
 ```
 
 ---
@@ -77,7 +77,7 @@ pytest powerskills/tests/ --cov=powerskills --cov-report=html
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                  PowerSkills 应用层                  │
+│                  SkillPilot 应用层                  │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐│
 │  │ Web 前端     │  │ API 服务     │  │ SDK          ││
 │  │ (待实现)     │  │ (FastAPI)    │  │ (Python)     ││
@@ -85,7 +85,7 @@ pytest powerskills/tests/ --cov=powerskills --cov-report=html
 └────────────────────┬────────────────────────────────┘
                      │ REST API
 ┌────────────────────▼────────────────────────────────┐
-│              PowerSkills 业务逻辑层                  │
+│              SkillPilot 业务逻辑层                  │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐│
 │  │ 技能搜索     │  │ 技能编排     │  │ 用户认证     ││
 │  │ 引擎         │  │ 引擎         │  │ 服务         ││
@@ -108,8 +108,8 @@ pytest powerskills/tests/ --cov=powerskills --cov-report=html
 ## 项目结构
 
 ```
-PowerSkills/
-├── powerskills/              # 主程序目录
+SkillPilot/
+├── skillpilot/                 # 主程序目录
 │   ├── api/routes/          # API 路由层
 │   │   ├── auth.py          # 认证路由
 │   │   ├── skill.py         # 技能管理路由
@@ -228,18 +228,18 @@ vector_dimension: 1536
 
 ```bash
 # 检查代码
-ruff check powerskills/
+ruff check skillpilot/
 
 # 格式化代码
-ruff format powerskills/
+ruff format skillpilot/
 ```
 
 ### 添加新功能
 
-1. 在对应模块添加模型定义 (`powerskills/core/models/`)
-2. 实现业务逻辑 (`powerskills/core/services/`)
-3. 添加 API 路由 (`powerskills/api/routes/`)
-4. 编写测试用例 (`powerskills/tests/`)
+1. 在对应模块添加模型定义 (`skillpilot/core/models/`)
+2. 实现业务逻辑 (`skillpilot/core/services/`)
+3. 添加 API 路由 (`skillpilot/api/routes/`)
+4. 编写测试用例 (`skillpilot/tests/`)
 
 ---
 
@@ -289,5 +289,5 @@ MIT License
 
 ## 联系方式
 
-- GitHub: [@wayyoungboy](https://github.com/wayyoungboy/PowerSkills)
+- GitHub: [@wayyoungboy](https://github.com/wayyoungboy/SkillPilot)
 - Email: wayyoungboy@gmail.com

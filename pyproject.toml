@@ -1,14 +1,14 @@
 [project]
-name = "powerskills"
-version = "0.1.0"
-description = "PowerSkills - 基于 SeekDB 的 AI 技能编排引擎"
+name = "skillpilot"
+version = "0.2.0"
+description = "SkillPilot - AI Skill Orchestration Engine based on SeekDB with Vector Search and Multi-Platform Support"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.11"
 authors = [
     { name = "wayyoungboy", email = "wayyoungboy@gmail.com" }
 ]
-keywords = ["seekdb", "ai", "skill", "orchestration", "vector-search"]
+keywords = ["seekdb", "ai", "skill", "orchestration", "vector-search", "llm"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -30,6 +30,7 @@ dependencies = [
     "httpx>=0.26.0",
     "structlog>=24.1.0",
     "pyseekdb>=1.1.0",
+    "email-validator>=2.1.0",
 ]
 
 [project.optional-dependencies]
@@ -46,21 +47,66 @@ test = [
     "pytest-cov>=4.1.0",
 ]
 
+# AI and Embedding providers
+ai-openai = [
+    "openai>=1.10.0",
+]
+
+ai-anthropic = [
+    "anthropic>=0.18.0",
+]
+
+ai-local = [
+    "sentence-transformers>=2.3.0",
+]
+
+# Platform adapters
+platform-coze = [
+    "coze>=0.1.0",
+]
+
+platform-dify = [
+    "dify-client>=0.1.0",
+]
+
+platform-langchain = [
+    "langchain-core>=0.1.0",
+]
+
+# All AI features
+ai-all = [
+    "openai>=1.10.0",
+    "anthropic>=0.18.0",
+    "sentence-transformers>=2.3.0",
+]
+
+# All platform adapters
+platforms-all = [
+    "coze>=0.1.0",
+    "dify-client>=0.1.0",
+    "langchain-core>=0.1.0",
+]
+
+# Complete installation with all features
+all = [
+    "skillpilot[ai-all,platforms-all]",
+]
+
 [project.urls]
-Homepage = "https://github.com/wayyoungboy/PowerSkills"
-Repository = "https://github.com/wayyoungboy/PowerSkills.git"
-Issues = "https://github.com/wayyoungboy/PowerSkills/issues"
+Homepage = "https://github.com/wayyoungboy/SkillPilot"
+Repository = "https://github.com/wayyoungboy/SkillPilot.git"
+Issues = "https://github.com/wayyoungboy/SkillPilot/issues"
 
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["powerskills*"]
+include = ["skillpilot*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
-testpaths = ["powerskills/tests"]
+testpaths = ["skillpilot/tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
@@ -69,7 +115,7 @@ addopts = "-v --tb=short"
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-src = ["powerskills"]
+src = ["skillpilot"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "C4"]
@@ -80,7 +126,7 @@ ignore = ["E501"]
 "tests/*" = ["F811", "F401"]
 
 [tool.coverage.run]
-source = ["powerskills"]
+source = ["skillpilot"]
 omit = ["tests/*", "*/__init__.py"]
 
 [tool.coverage.report]
