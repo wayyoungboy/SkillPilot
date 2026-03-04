@@ -40,6 +40,18 @@ class Settings(BaseSettings):
     # Rate Limiting
     rate_limit_per_minute: int = Field(default=100, description="Requests per minute limit")
 
+    # AI Providers
+    openai_api_key: str | None = Field(default=None, description="OpenAI API Key")
+    anthropic_api_key: str | None = Field(default=None, description="Anthropic API Key")
+    embedding_provider: str = Field(default="mock", description="Embedding provider (openai, local, mock)")
+    llm_provider: str = Field(default="mock", description="LLM provider (openai, anthropic, mock)")
+
+    # Platform APIs
+    coze_api_base: str = Field(default="https://api.coze.com", description="Coze API Base URL")
+    dify_api_key: str | None = Field(default=None, description="Dify API Key")
+    dify_api_base: str = Field(default="https://api.dify.ai/v1", description="Dify API Base URL")
+    langchain_endpoint_url: str | None = Field(default=None, description="LangChain/LangServe Endpoint")
+
 
 @lru_cache
 def get_settings() -> Settings:

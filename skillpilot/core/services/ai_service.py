@@ -1,8 +1,10 @@
 """AI Service for intelligent orchestration and decision making"""
 
+import json
 from typing import Any
 
 from skillpilot.core.config import settings
+from skillpilot.core.models.common import PlatformType
 from skillpilot.core.models.orchestration import SkillChainStep
 from skillpilot.core.utils.logger import get_logger
 
@@ -12,16 +14,21 @@ logger = get_logger(__name__)
 class AIService:
     """
     AI Service for intelligent task analysis and skill chain generation.
-    
+
     Uses LLMs to:
     - Analyze task descriptions
     - Generate optimal skill chains
     - Suggest skill combinations
     - Optimize execution plans
+
+    Supported providers:
+    - OpenAI (gpt-4o-mini)
+    - Anthropic (claude-3-haiku-20240307)
+    - Mock (for development/testing without API keys)
     """
 
     def __init__(self):
-        self.provider = "openai"  # Default provider
+        self.provider = settings.llm_provider
         self._client = None
 
     def _get_client(self):
@@ -31,180 +38,148 @@ class AIService:
                 try:
                     from openai import AsyncOpenAI
 
-                    self._client = AsyncOpenAI()
+                    if not settings.openai_api_key:
+                        raise ValueError("OPENAI_API_KEY not configured")
+
+                    self._client = AsyncOpenAI(api_key=settings.openai_api_key)
                     logger.info("OpenAI LLM client initialized")
                 except ImportError:
-                    logger.warning("OpenAI not installed, using rule-based fallback")
-                    self._client = None
+                    logger.error("OpenAI SDK not installed. Run: pip install openai")
+                    raise
+                except Exception as e:
+                    logger.error("Failed to initialize OpenAI client", error=str(e))
+                    raise
+
             elif self.provider == "anthropic":
                 try:
                     from anthropic import AsyncAnthropic
 
-                    self._client = AsyncAnthropic()
+                    if not settings.anthropic_api_key:
+                        raise ValueError("ANTHROPIC_API_KEY not configured")
+
+                    self._client = AsyncAnthropic(api_key=settings.anthropic_api_key)
                     logger.info("Anthropic LLM client initialized")
                 except ImportError:
-                    logger.warning("Anthropic not installed, using rule-based fallback")
-                    self._client = None
+                    logger.error("Anthropic SDK not installed. Run: pip install anthropic")
+                    raise
+                except Exception as e:
+                    logger.error("Failed to initialize Anthropic client", error=str(e))
+                    raise
+
+            # Mock provider doesn't need a client
+            elif self.provider == "mock":
+                logger.info("Mock LLM provider initialized (no API key required)")
 
         return self._client
 
     async def analyze_task(self, task_description: str) -> dict[str, Any]:
         """
         Analyze a task description to extract requirements.
-        
+
         Args:
             task_description: Natural language task description
-            
+
         Returns:
             Analysis results including required capabilities, complexity, etc.
+
+        Raises:
+            ValueError: If analysis fails
         """
+        # Mock provider - return basic analysis without LLM
+        if self.provider == "mock":
+            logger.info("Task analyzed with Mock provider", task=task_description[:50])
+            return {
+                "required_capabilities": ["general"],
+                "complexity": "medium",
+                "output_format": "JSON",
+                "dependencies": [],
+            }
+
         client = self._get_client()
-        
-        if client is None:
-            return self._rule_based_analysis(task_description)
-        
+
         try:
             if self.provider == "openai":
-                response = await client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": (
-                                "You are a task analysis expert. Analyze the task and extract: "
-                                "1. Required capabilities (list of skills needed) "
-                                "2. Complexity level (simple/medium/complex) "
-                                "3. Expected output format "
-                                "4. Dependencies between steps "
-                                "Respond in JSON format."
-                            ),
-                        },
-                        {
-                            "role": "user",
-                            "content": f"Analyze this task: {task_description}",
-                        },
-                    ],
-                    response_format={"type": "json_object"},
-                    temperature=0.3,
-                )
-                
-                import json
-                analysis = json.loads(response.choices[0].message.content)
-                logger.info("Task analyzed with AI", task=task_description[:50])
+                analysis = await self._analyze_with_openai(client, task_description)
+                logger.info("Task analyzed with OpenAI", task=task_description[:50])
                 return analysis
-                
+
             elif self.provider == "anthropic":
-                response = await client.messages.create(
-                    model="claude-3-haiku-20240307",
-                    max_tokens=1024,
-                    messages=[
-                        {
-                            "role": "user",
-                            "content": (
-                                f"Analyze this task and provide a JSON response with "
-                                f"required_capabilities, complexity, output_format, and dependencies: "
-                                f"{task_description}"
-                            ),
-                        }
-                    ],
-                )
-                
-                import json
-                analysis = json.loads(response.content[0].text)
+                analysis = await self._analyze_with_anthropic(client, task_description)
                 logger.info("Task analyzed with Anthropic", task=task_description[:50])
                 return analysis
-                
+
         except Exception as e:
-            logger.error("AI task analysis failed", error=str(e))
-            return self._rule_based_analysis(task_description)
+            logger.error("AI task analysis failed", provider=self.provider, error=str(e))
+            raise
 
     async def generate_skill_chain(
         self, task_description: str, available_skills: list[dict]
     ) -> list[SkillChainStep]:
         """
         Generate an optimal skill chain for a task.
-        
+
         Args:
             task_description: Task to accomplish
             available_skills: List of available skills to choose from
-            
+
         Returns:
             Ordered list of skill chain steps
+
+        Raises:
+            ValueError: If skill chain generation fails
         """
+        # Mock provider - return first available skill as a simple chain
+        if self.provider == "mock":
+            if not available_skills:
+                logger.warning("No available skills provided for mock chain generation")
+                return []
+            # Simple mock: just use the first skill
+            first_skill = available_skills[0]
+            logger.info("Skill chain generated with Mock provider", steps=1)
+            return [
+                SkillChainStep(
+                    step=1,
+                    skill_id=first_skill.get("skill_id", "mock-skill"),
+                    skill_name=first_skill.get("skill_name", "Mock Skill"),
+                    platform=first_skill.get("platform", "custom"),
+                    input={"task": task_description},
+                    output_format="JSON",
+                    depends_on=[],
+                )
+            ]
+
         client = self._get_client()
-        
-        if client is None or len(available_skills) == 0:
-            return self._rule_based_chain_generation(task_description, available_skills)
-        
+
+        if not available_skills:
+            logger.warning("No available skills provided for chain generation")
+            return []
+
         try:
             if self.provider == "openai":
-                # Prepare skills context
-                skills_context = "\n".join(
-                    [
-                        f"- {s['skill_id']}: {s['skill_name']} ({s['platform']}) - {s.get('description', '')}"
-                        for s in available_skills
-                    ]
+                chain = await self._generate_chain_with_openai(
+                    client, task_description, available_skills
                 )
-                
-                response = await client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": (
-                                "You are a skill orchestration expert. Given a task and available skills, "
-                                "create an optimal execution chain. Consider: "
-                                "1. Skill capabilities and compatibility "
-                                "2. Execution order and dependencies "
-                                "3. Input/output format matching "
-                                "Respond with a JSON array of skill chain steps."
-                            ),
-                        },
-                        {
-                            "role": "user",
-                            "content": (
-                                f"Task: {task_description}\n\n"
-                                f"Available Skills:\n{skills_context}\n\n"
-                                "Generate an optimal skill chain."
-                            ),
-                        },
-                    ],
-                    response_format={"type": "json_object"},
-                    temperature=0.3,
-                )
-                
-                import json
-                result = json.loads(response.choices[0].message.content)
-                
-                # Parse into SkillChainStep objects
-                chain = []
-                steps_data = result.get("steps", [])
-                for idx, step_data in enumerate(steps_data, 1):
-                    step = SkillChainStep(
-                        step=idx,
-                        skill_id=step_data.get("skill_id", "unknown"),
-                        skill_name=step_data.get("skill_name", "Unknown Skill"),
-                        platform=step_data.get("platform", "custom"),
-                        input=step_data.get("input", {}),
-                        output_format=step_data.get("output_format", "JSON"),
-                        depends_on=step_data.get("depends_on", []),
-                    )
-                    chain.append(step)
-                
-                logger.info("Skill chain generated with AI", steps=len(chain))
+                logger.info("Skill chain generated with OpenAI", steps=len(chain))
                 return chain
-                
+
+            elif self.provider == "anthropic":
+                chain = await self._generate_chain_with_anthropic(
+                    client, task_description, available_skills
+                )
+                logger.info("Skill chain generated with Anthropic", steps=len(chain))
+                return chain
+
         except Exception as e:
-            logger.error("AI skill chain generation failed", error=str(e))
-            return self._rule_based_chain_generation(task_description, available_skills)
+            logger.error("AI skill chain generation failed", provider=self.provider, error=str(e))
+            raise
 
     async def optimize_execution_plan(self, skill_chain: list[SkillChainStep]) -> list[SkillChainStep]:
         """
         Optimize an existing skill chain for better performance.
-        
+
         Args:
             skill_chain: Original skill chain
-            
+
         Returns:
             Optimized skill chain
         """
@@ -213,100 +188,152 @@ class AIService:
         logger.info("Execution plan optimization (not yet implemented)")
         return skill_chain
 
-    def _rule_based_analysis(self, task_description: str) -> dict[str, Any]:
-        """Fallback rule-based task analysis"""
-        task_lower = task_description.lower()
-        
-        capabilities = []
-        complexity = "simple"
-        output_format = "JSON"
-        
-        # Detect capabilities
-        if any(k in task_lower for k in ["scrape", "crawl", "extract", "website", "url"]):
-            capabilities.append("web_scraping")
-            complexity = "medium"
-        
-        if any(k in task_lower for k in ["analyze", "analysis", "sentiment", "classify"]):
-            capabilities.append("content_analysis")
-            complexity = "medium"
-        
-        if any(k in task_lower for k in ["summarize", "summary", "brief"]):
-            capabilities.append("summarization")
-        
-        if any(k in task_lower for k in ["translate", "translation"]):
-            capabilities.append("translation")
-            complexity = "medium"
-        
-        if any(k in task_lower for k in ["report", "document", "pdf"]):
-            capabilities.append("document_generation")
-            output_format = "PDF"
-            complexity = "complex"
-        
-        if any(k in task_lower for k in ["image", "picture", "visual"]):
-            capabilities.append("image_processing")
-            complexity = "complex"
-        
-        return {
-            "required_capabilities": capabilities,
-            "complexity": complexity,
-            "output_format": output_format,
-            "dependencies": [],
-        }
+    async def _analyze_with_openai(self, client, task_description: str) -> dict[str, Any]:
+        """Analyze task using OpenAI"""
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a task analysis expert. Analyze the task and extract: "
+                        "1. Required capabilities (list of skills needed) "
+                        "2. Complexity level (simple/medium/complex) "
+                        "3. Expected output format "
+                        "4. Dependencies between steps "
+                        "Respond in JSON format."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": f"Analyze this task: {task_description}",
+                },
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.3,
+        )
 
-    def _rule_based_chain_generation(
-        self, task_description: str, available_skills: list[dict]
+        analysis = json.loads(response.choices[0].message.content)
+        return analysis
+
+    async def _analyze_with_anthropic(self, client, task_description: str) -> dict[str, Any]:
+        """Analyze task using Anthropic"""
+        response = await client.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=1024,
+            messages=[
+                {
+                    "role": "user",
+                    "content": (
+                        f"Analyze this task and provide a JSON response with "
+                        f"required_capabilities, complexity, output_format, and dependencies: "
+                        f"{task_description}"
+                    ),
+                }
+            ],
+        )
+
+        analysis = json.loads(response.content[0].text)
+        return analysis
+
+    async def _generate_chain_with_openai(
+        self, client, task_description: str, available_skills: list[dict]
     ) -> list[SkillChainStep]:
-        """Fallback rule-based skill chain generation"""
-        from skillpilot.core.models.common import PlatformType
-        
-        analysis = self._rule_based_analysis(task_description)
-        capabilities = analysis["required_capabilities"]
-        
-        chain = []
-        step_num = 1
-        
-        # Match skills to capabilities
-        for capability in capabilities:
-            matching_skills = [
-                s for s in available_skills if capability in s.get("capabilities", [])
+        """Generate skill chain using OpenAI"""
+        skills_context = "\n".join(
+            [
+                f"- {s['skill_id']}: {s['skill_name']} ({s['platform']}) - {s.get('description', '')}"
+                for s in available_skills
             ]
-            
-            if matching_skills:
-                skill = matching_skills[0]
-                chain.append(
-                    SkillChainStep(
-                        step=step_num,
-                        skill_id=skill["skill_id"],
-                        skill_name=skill["skill_name"],
-                        platform=PlatformType(skill.get("platform", "custom")),
-                        input={"data": f"input_for_{capability}"},
-                        output_format="JSON",
-                        depends_on=[step_num - 1] if step_num > 1 else [],
-                    )
-                )
-                step_num += 1
-        
-        # Default skill if no matches
-        if not chain and available_skills:
-            skill = available_skills[0]
-            chain.append(
-                SkillChainStep(
-                    step=1,
-                    skill_id=skill["skill_id"],
-                    skill_name=skill["skill_name"],
-                    platform=PlatformType(skill.get("platform", "custom")),
-                    output_format="JSON",
-                )
+        )
+
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a skill orchestration expert. Given a task and available skills, "
+                        "create an optimal execution chain. Consider: "
+                        "1. Skill capabilities and compatibility "
+                        "2. Execution order and dependencies "
+                        "3. Input/output format matching "
+                        "Respond with a JSON object containing a 'steps' array."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": (
+                        f"Task: {task_description}\n\n"
+                        f"Available Skills:\n{skills_context}\n\n"
+                        "Generate an optimal skill chain."
+                    ),
+                },
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.3,
+        )
+
+        result = json.loads(response.choices[0].message.content)
+        return self._parse_skill_chain(result.get("steps", []))
+
+    async def _generate_chain_with_anthropic(
+        self, client, task_description: str, available_skills: list[dict]
+    ) -> list[SkillChainStep]:
+        """Generate skill chain using Anthropic"""
+        skills_context = "\n".join(
+            [
+                f"- {s['skill_id']}: {s['skill_name']} ({s['platform']}) - {s.get('description', '')}"
+                for s in available_skills
+            ]
+        )
+
+        response = await client.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=2048,
+            messages=[
+                {
+                    "role": "user",
+                    "content": (
+                        f"Task: {task_description}\n\n"
+                        f"Available Skills:\n{skills_context}\n\n"
+                        "Generate an optimal skill chain as a JSON array of steps. "
+                        "Each step should have: skill_id, skill_name, platform, input, output_format, depends_on."
+                    ),
+                }
+            ],
+        )
+
+        result = json.loads(response.content[0].text)
+        steps = result if isinstance(result, list) else result.get("steps", [])
+        return self._parse_skill_chain(steps)
+
+    def _parse_skill_chain(self, steps_data: list) -> list[SkillChainStep]:
+        """Parse raw step data into SkillChainStep objects"""
+        chain = []
+        for idx, step_data in enumerate(steps_data, 1):
+            platform_value = step_data.get("platform", "custom")
+            if isinstance(platform_value, dict):
+                platform_value = platform_value.get("value", "custom")
+
+            step = SkillChainStep(
+                step=idx,
+                skill_id=step_data.get("skill_id", "unknown"),
+                skill_name=step_data.get("skill_name", "Unknown Skill"),
+                platform=platform_value,
+                input=step_data.get("input", {}),
+                output_format=step_data.get("output_format", "JSON"),
+                depends_on=step_data.get("depends_on", []),
             )
-        
-        logger.info("Skill chain generated (rule-based)", steps=len(chain))
+            chain.append(step)
+
         return chain
 
     def set_provider(self, provider: str) -> None:
         """Set the LLM provider"""
         if provider not in ["openai", "anthropic", "mock"]:
             raise ValueError(f"Unknown provider: {provider}")
-        
+
         self.provider = provider
         self._client = None
         logger.info("AI provider set", provider=provider)

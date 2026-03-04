@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from skillpilot.api.routes import auth, orchestration, platform, skill, vector_search
+from skillpilot.api.routes import auth, orchestration, skill, vector_search
 from skillpilot.core.config import settings
 from skillpilot.core.utils.logger import configure_logging, get_logger
 from skillpilot.db.seekdb import seekdb_client
@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI):
 # Create FastAPI application
 app = FastAPI(
     title=settings.project_name,
-    description="AI Skill Orchestration Engine with Vector Search and Multi-Platform Support",
+    description="AI Skill Search Engine with Vector Search and Multi-Platform Catalog",
     version="0.2.0",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -78,7 +78,6 @@ app.include_router(auth.router, prefix=settings.api_v1_prefix)
 app.include_router(skill.router, prefix=settings.api_v1_prefix)
 app.include_router(orchestration.router, prefix=settings.api_v1_prefix)
 app.include_router(vector_search.router, prefix=settings.api_v1_prefix)
-app.include_router(platform.router, prefix=settings.api_v1_prefix)
 
 
 @app.get("/")
@@ -87,12 +86,12 @@ async def root():
     return {
         "name": settings.project_name,
         "version": "0.2.0",
-        "description": "AI Skill Orchestration Engine",
+        "description": "AI Skill Search Engine",
         "features": [
-            "Vector Search",
-            "AI-Powered Orchestration",
-            "Multi-Platform Support (Coze, Dify, LangChain)",
-            "Semantic Skill Matching",
+            "Semantic Vector Search",
+            "Multi-Platform Skill Catalog (Coze, Dify, LangChain)",
+            "AI-Powered Skill Matching",
+            "Skill Recommendation",
         ],
         "docs": "/docs",
         "health": "/health",

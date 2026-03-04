@@ -112,7 +112,7 @@ class TestSkillHubAPI:
     @pytest.mark.asyncio
     async def test_orchestrations_list_unauthorized(self, client):
         """Test orchestrations list - unauthorized"""
-        response = await client.get("/api/v1/orchestrations")
+        response = await client.get("/api/v1/recommendations/plans")
 
         # Returns 401 Unauthorized (not 403)
         assert response.status_code == 401
@@ -140,7 +140,7 @@ class TestSkillHubAPI:
                     )
 
                     response = await client.post(
-                        "/api/v1/orchestrations",
+                        "/api/v1/recommendations/save",
                         json={
                             "task_description": "Analyze website and generate report",
                             "options": {},
@@ -151,7 +151,7 @@ class TestSkillHubAPI:
                     assert response.status_code == 201
                     data = response.json()
                     assert "plan_id" in data
-                    assert "skill_chain" in data
+                    assert "steps" in data
 
 
 class TestSeekDBIntegration:

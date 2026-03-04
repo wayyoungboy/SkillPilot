@@ -259,15 +259,64 @@ class VectorSearchService:
     ) -> list[SkillSearchResult]:
         """Fallback to keyword search if vector search fails"""
         logger.warning("Using fallback keyword search", query=query[:50])
-        
-        from skillpilot.core.services.skill import skill_service
-        
-        results = await skill_service.search_skills(query, platforms, limit=top_k)
-        # Set mock similarity for fallback results
-        for result in results:
-            result.similarity = 0.5  # Default similarity for keyword matches
-        
-        return results
+
+        from skillpilot.core.models.skill import Skill
+        from skillpilot.core.utils.logger import get_logger
+
+        fallback_logger = get_logger("vector_search.fallback")
+
+        # Direct keyword search without calling skill_service to avoid recursion
+        try:
+            from skillpilot.db.seekdb import seekdb_client
+
+            # Query all skills and do keyword matching locally
+            all_skills_data = await seekdb_client.query("skills", filters={}, limit=1000)
+
+            query_lower = query.lower()
+            results = []
+
+            for skill_data in all_skills_data:
+                # Check if query matches any skill field
+                searchable = (
+                    f"{skill_data.get('skill_name', '')} "
+                    f"{skill_data.get('description', '')} "
+                    f"{' '.join(skill_data.get('capabilities', []))} "
+                    f"{' '.join(skill_data.get('tags', []))}"
+                ).lower()
+
+                if query_lower in searchable:
+                    # Parse skill data
+                    from skillpilot.core.models.common import PlatformType
+                    from skillpilot.core.models.skill import SkillSearchResult
+
+                    skill = Skill(
+                        skill_id=skill_data["skill_id"],
+                        skill_name=skill_data["skill_name"],
+                        platform=PlatformType(skill_data.get("platform", "custom")),
+                        developer=skill_data.get("developer"),
+                        description=skill_data.get("description"),
+                        capabilities=skill_data.get("capabilities", []),
+                        tags=skill_data.get("tags", []),
+                        pricing=skill_data.get("pricing", {}),
+                        rating=skill_data.get("rating", 0.0),
+                        usage_count=skill_data.get("usage_count", 0),
+                        created_at=skill_data.get("created_at"),
+                        updated_at=skill_data.get("updated_at"),
+                    )
+
+                    results.append(
+                        SkillSearchResult(**skill.model_dump(), similarity=0.5)
+                    )
+
+                    if len(results) >= top_k:
+                        break
+
+            fallback_logger.info("Keyword search completed", query=query[:50], results=len(results))
+            return results
+
+        except Exception as e:
+            fallback_logger.error("Keyword search failed", query=query[:50], error=str(e))
+            return []
 
 
 vector_search_service = VectorSearchService()

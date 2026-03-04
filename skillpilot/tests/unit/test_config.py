@@ -13,7 +13,7 @@ class TestSettings:
         with patch.dict("os.environ", {}, clear=True):
             settings = Settings()
 
-            assert settings.project_name == "PowerSkills"
+            assert settings.project_name == "SkillPilot"
             assert settings.api_v1_prefix == "/api/v1"
             assert settings.debug is False
 

@@ -31,6 +31,7 @@ dependencies = [
     "structlog>=24.1.0",
     "pyseekdb>=1.1.0",
     "email-validator>=2.1.0",
+    "openai>=1.10.0",
 ]
 
 [project.optional-dependencies]
@@ -47,7 +48,7 @@ test = [
     "pytest-cov>=4.1.0",
 ]
 
-# AI and Embedding providers
+# AI providers
 ai-openai = [
     "openai>=1.10.0",
 ]
@@ -56,21 +57,9 @@ ai-anthropic = [
     "anthropic>=0.18.0",
 ]
 
+# Local embedding model
 ai-local = [
     "sentence-transformers>=2.3.0",
-]
-
-# Platform adapters
-platform-coze = [
-    "coze>=0.1.0",
-]
-
-platform-dify = [
-    "dify-client>=0.1.0",
-]
-
-platform-langchain = [
-    "langchain-core>=0.1.0",
 ]
 
 # All AI features
@@ -80,16 +69,29 @@ ai-all = [
     "sentence-transformers>=2.3.0",
 ]
 
-# All platform adapters
-platforms-all = [
+# Platform importers
+import-coze = [
+    "coze>=0.1.0",
+]
+
+import-dify = [
+    "dify-client>=0.1.0",
+]
+
+import-huggingface = [
+    "huggingface_hub>=0.20.0",
+]
+
+# All importers
+import-all = [
     "coze>=0.1.0",
     "dify-client>=0.1.0",
-    "langchain-core>=0.1.0",
+    "huggingface_hub>=0.20.0",
 ]
 
 # Complete installation with all features
 all = [
-    "skillpilot[ai-all,platforms-all]",
+    "skillpilot[ai-all,import-all]",
 ]
 
 [project.urls]

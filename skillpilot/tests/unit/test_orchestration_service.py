@@ -48,6 +48,7 @@ class TestOrchestrationService:
 
         mock_plan_data = {
             "plan_id": "op_test123",
+            "user_id": "usr_test",
             "task_description": "Test task",
             "skill_chain": [
                 {
@@ -177,6 +178,7 @@ class TestOrchestrationService:
         mock_plans = [
             {
                 "plan_id": "op_1",
+                "user_id": "usr_test",
                 "task_description": "Task 1",
                 "skill_chain": [],
                 "status": "completed",
@@ -185,6 +187,7 @@ class TestOrchestrationService:
             },
             {
                 "plan_id": "op_2",
+                "user_id": "usr_test",
                 "task_description": "Task 2",
                 "skill_chain": [],
                 "status": "pending_confirmation",

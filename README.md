@@ -16,6 +16,7 @@
 
 - Python 3.11 or higher
 - SeekDB (local or remote service)
+- OpenAI API Key (for embeddings and AI recommendations)
 
 ### Installation
 
@@ -39,7 +40,9 @@ pip install -e ".[dev]"
 # Copy environment configuration
 cp .env.example .env
 
-# Edit .env file to configure SeekDB connection
+# Edit .env file to configure:
+# - SeekDB connection
+# - OpenAI API Key (OPENAI_API_KEY)
 ```
 
 ### Running
@@ -50,6 +53,29 @@ uvicorn skillpilot.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Visit http://localhost:8000/docs to view the API documentation.
+
+### Import Skills from Platforms
+
+SkillPilot supports importing skills from multiple AI platforms:
+
+```bash
+# Install all importers
+pip install -e ".[import-all]"
+
+# Import from Coze
+python -m scripts.import_skills --platform coze --api-key YOUR_KEY
+
+# Import from Dify
+python -m scripts.import_skills --platform dify --api-key YOUR_KEY
+
+# Import from Hugging Face (no config needed)
+python -m scripts.import_skills --platform huggingface --limit 100
+
+# Import from all platforms
+python -m scripts.import_skills --all --limit 25
+```
+
+See [IMPORTERS.md](IMPORTERS.md) for detailed documentation.
 
 ### Testing
 
@@ -67,7 +93,8 @@ pytest skillpilot/tests/ --cov=skillpilot --cov-report=html
 
 - **SeekDB as Single Storage** - Uses SeekDB as both vector database and relational database, simplifying the tech stack
 - **Unified Skill Management** - Supports unified storage, search, and management of multi-platform skills
-- **Intelligent Orchestration Engine** - Automatically generates skill execution chains based on natural language task descriptions
+- **AI-Powered Recommendations** - Intelligent task analysis and skill matching using LLMs
+- **Plugin-based Importers** - Import skills from Coze, Dify, GPT Store, Hugging Face with extensible architecture
 - **Complete RESTful API** - Supports skill management, user authentication, and task orchestration
 - **High Test Coverage** - 54+ unit and integration tests to ensure code quality
 
